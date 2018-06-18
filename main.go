@@ -31,19 +31,19 @@ type config struct {
 	Period          int     `default:"30"`
 	Timeout         int     `default:"5"`
 	LogLevel        string  `default:"info"`
-	DriveTokenFile  string  `default:"drive_token.json"`
-	DriveSecretFile string  `default:"drive_client_secret.json"`
+	DriveTokenFile  string  `default:"drive_token.json" split_words:"true"`
+	DriveSecretFile string  `default:"drive_client_secret.json" split_words:"true"`
+	LocalMode       bool    `default:"false" split_words:"true"`
 	Endpoint        string  `required:"true"`
 	Latitude        float64 `required:"true"`
 	Longitude       float64 `required:"true"`
 	Offset          float64 `required:"true"`
 }
 
-// Package level config, http.Client, Drive service, and if it is being used
+// Package level config, http.Client, and Drive service.
 var (
 	conf         config
 	client       http.Client
-	localMode    bool
 	driveService *drive.Service
 )
 
@@ -72,11 +72,13 @@ func init() {
 	}
 
 	// Authentication with Google Drive
-	driveService, err = getDriveService()
-	if err != nil {
-		log.Errorf("Error authenticating with Google Drive: %s", err)
-		log.Errorf("Running in local-only mode")
-		localMode = true
+	if !conf.LocalMode {
+		driveService, err = getDriveService()
+		if err != nil {
+			log.Errorf("Error authenticating with Google Drive: %s", err)
+			log.Errorf("Running in local-only mode")
+			conf.LocalMode = true
+		}
 	}
 
 	// HTTP client options
