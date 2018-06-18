@@ -334,12 +334,12 @@ func archiveImages(date time.Time) error {
 			cLog.Error(err)
 			continue
 		}
-		defer file.Close()
 
 		// Build the tar header from the stat
 		header, err := tar.FileInfoHeader(path, fullPath)
 		if err != nil {
 			cLog.Error(err)
+			file.Close()
 			continue
 		}
 
@@ -347,6 +347,7 @@ func archiveImages(date time.Time) error {
 		err = archive.WriteHeader(header)
 		if err != nil {
 			cLog.Error(err)
+			file.Close()
 			continue
 		}
 
@@ -354,8 +355,11 @@ func archiveImages(date time.Time) error {
 		_, err = io.Copy(archive, file)
 		if err != nil {
 			cLog.Error(err)
+			file.Close()
 			continue
 		}
+
+		file.Close()
 	}
 
 	return nil
